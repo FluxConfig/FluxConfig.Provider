@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+option csharp_namespace = "FluxConfig.Provider.GrpcContracts.Client";
+
+package storage.public.v1;
+
+service Storage {
+  rpc LoadVaultConfig (LoadConfigRequest) returns (LoadConfigResponse);
+
+  rpc LoadRealTimeConfig (LoadConfigRequest) returns (LoadConfigResponse);
+}
+
+message LoadConfigRequest {
+  string configuration_tag = 1;
+}
+
+message LoadConfigResponse {
+  map<string, google.protobuf.StringValue> configuration_data = 1;
+}
