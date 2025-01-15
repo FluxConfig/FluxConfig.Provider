@@ -2,6 +2,7 @@ namespace FluxConfig.Provider.Options;
 
 public class ConnectionOptions
 {
+    internal const string ApiKeyHeader = "X-API-KEY";
     public Uri? Address { get; set; }
     public string? ApiKey { get; set; }
 
@@ -10,13 +11,6 @@ public class ConnectionOptions
         Address = address;
         ApiKey = apiKey;
     }
-
-    public ConnectionOptions(string address, string? apiKey)
-    {
-        Address = new Uri(address);
-        ApiKey = apiKey;
-    }
-
     public ConnectionOptions()
     {
         

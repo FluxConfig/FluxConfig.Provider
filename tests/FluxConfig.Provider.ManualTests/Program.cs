@@ -22,5 +22,7 @@ public sealed class Program
                 options.RefreshInterval = TimeSpan.FromSeconds(20);
             });
         });
+
+        using var host = builder.Build();
     }
 }

@@ -125,6 +125,6 @@ internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
 
     public void Dispose()
     {
-        _channel.Dispose();
+        _channel?.Dispose();
     }
 }

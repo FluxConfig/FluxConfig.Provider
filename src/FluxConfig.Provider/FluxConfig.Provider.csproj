@@ -5,6 +5,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+    </PropertyGroup>
     
     <ItemGroup>
         <Protobuf Include="..\Protos\fluxconfig.proto" GrpcServices="Client"/>
