@@ -12,7 +12,7 @@ public class FluxConfigOptions
         get => _refreshInterval;
         set
         {
-            if (value.TotalMilliseconds >= 1000)
+            if (value.TotalMilliseconds >= 1_000)
             {
                 _refreshInterval = value;
             }

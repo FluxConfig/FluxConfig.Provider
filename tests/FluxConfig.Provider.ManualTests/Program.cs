@@ -1,5 +1,7 @@
-﻿using FluxConfig.Provider.Options;
+﻿using FluxConfig.Provider.ManualTests.Options;
+using FluxConfig.Provider.Options;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace FluxConfig.Provider.ManualTests;
@@ -8,20 +10,25 @@ public sealed class Program
 {
     public static void Main()
     {
-        var builder = Host.CreateDefaultBuilder();
+        var builder = Host.CreateApplicationBuilder();
 
-        builder.ConfigureAppConfiguration((context, configurationBuilder) =>
+        TestConnectionOptions fluxConnection = builder.Configuration
+                                                   .GetSection($"FluxConfigOptions:{nameof(TestConnectionOptions)}")
+                                                   .Get<TestConnectionOptions>() ??
+                                               throw new ArgumentException("FluxConfig connection options are missing.");
+
+        builder.Configuration.AddFluxConfig(options =>
         {
-            configurationBuilder.AddFluxConfig(options =>
-            {
-                options.ConnectionOptions = new ConnectionOptions(
-                    address: new Uri("https://localhost:7045"),
-                    apiKey: "TEST-API-KEY"
-                );
-                options.ConfigurationTag = "Development";
-                options.RefreshInterval = TimeSpan.FromSeconds(20);
-            });
+            options.ConnectionOptions = new ConnectionOptions(
+                address: new Uri(fluxConnection.StorageUrl),
+                apiKey: fluxConnection.ApiKey
+            );
+            options.ConfigurationTag = fluxConnection.ConfigurationTag;
+            options.RefreshInterval = TimeSpan.FromSeconds(20);
         });
+
+        builder.Services.Configure<SimpleOptions>(
+            builder.Configuration.GetSection($"FluxConfigOptions:{nameof(ConnectionOptions)}"));
 
         using var host = builder.Build();
     }
