@@ -3,12 +3,13 @@ using FluxConfig.Provider.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace FluxConfig.Provider.ManualTests;
 
 public sealed class Program
 {
-    public static void Main()
+    public static async Task Main()
     {
         var builder = Host.CreateApplicationBuilder();
 
@@ -24,12 +25,25 @@ public sealed class Program
                 apiKey: fluxConnection.ApiKey
             );
             options.ConfigurationTag = fluxConnection.ConfigurationTag;
-            options.RefreshInterval = TimeSpan.FromSeconds(20);
+            options.RefreshInterval = TimeSpan.FromSeconds(5);
         });
 
         builder.Services.Configure<SimpleOptions>(
-            builder.Configuration.GetSection($"FluxConfigOptions:{nameof(ConnectionOptions)}"));
+            builder.Configuration.GetSection("SimpleOptions"));
 
         using var host = builder.Build();
+
+        var testOptionsMonitor = host.Services.GetRequiredService<IOptionsMonitor<SimpleOptions>>();
+
+        await Task.Run(async () =>
+        {
+            do
+            {
+                var options = testOptionsMonitor.CurrentValue;
+                
+                Console.WriteLine($"{options.StringConfig}\n{options.IntConfig}\n{options.BoolConfig}\n");
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            } while (true);
+        });
     }
 }

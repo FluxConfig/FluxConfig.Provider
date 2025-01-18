@@ -18,7 +18,7 @@ internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
         _configurationTag = configurationTag;
     }
 
-    public async Task<Dictionary<string, string>> LoadRealTimeConfigAsync(CancellationToken cancellationToken)
+    public async Task<Dictionary<string, string?>> LoadRealTimeConfigAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -30,12 +30,12 @@ internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
         //TODO: rework for exception handling
         catch (Exception ex)
         {
-            Debug.WriteLine($"Exception occured while fetching config data: {ex.Message}");
-            return new Dictionary<string, string>();
+            Console.WriteLine($"Exception occured while fetching config data: {ex.Message}");
+            return new Dictionary<string, string?>();
         }
     }
 
-    private static async Task<Dictionary<string, string>> LoadRealTimeConfigAsyncUnsafe(
+    private static async Task<Dictionary<string, string?>> LoadRealTimeConfigAsyncUnsafe(
         GrpcChannel channel,
         string configurationTag,
         CancellationToken cancellationToken)
@@ -50,10 +50,10 @@ internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
             cancellationToken: cancellationToken
         );
 
-        return response.ConfigurationData.ToDictionary(x => x.Key, x => x.Value);
+        return response.ConfigurationData.ToDictionary(x => x.Key, x => x.Value ?? null);
     }
 
-    public async Task<Dictionary<string, string>> LoadVaultConfigAsync(CancellationToken cancellationToken)
+    public async Task<Dictionary<string, string?>> LoadVaultConfigAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -66,12 +66,12 @@ internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
         //TODO: rework for exception handling
         catch (Exception ex)
         {
-            Debug.WriteLine($"Exception occured while fetching config data: {ex.Message}");
-            return new Dictionary<string, string>();
+            Console.WriteLine($"Exception occured while fetching config data: {ex.Message}");
+            return new Dictionary<string, string?>();
         }
     }
 
-    private static async Task<Dictionary<string, string>> LoadVaultConfigAsyncUnsafe(
+    private static async Task<Dictionary<string, string?>> LoadVaultConfigAsyncUnsafe(
         GrpcChannel channel,
         string configurationTag,
         CancellationToken cancellationToken)
@@ -86,10 +86,10 @@ internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
             cancellationToken: cancellationToken
         );
 
-        return response.ConfigurationData.ToDictionary(x => x.Key, x => x.Value);
+        return response.ConfigurationData.ToDictionary(x => x.Key, x => x.Value ?? null);
     }
 
-    public Dictionary<string, string> LoadVaultConfig()
+    public Dictionary<string, string?> LoadVaultConfig()
     {
         try
         {
@@ -101,12 +101,12 @@ internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
         //TODO: rework for exception handling
         catch (Exception ex)
         {
-            Debug.WriteLine($"Exception occured while fetching config data: {ex.Message}");
-            return new Dictionary<string, string>();
+            Console.WriteLine($"Exception occured while fetching config data: {ex.Message}");
+            return new Dictionary<string, string?>();
         }
     }
 
-    private static Dictionary<string, string> LoadVaultConfigUnsafe(
+    private static Dictionary<string, string?> LoadVaultConfigUnsafe(
         GrpcChannel channel,
         string configurationTag
     )
@@ -120,11 +120,11 @@ internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
             }
         );
 
-        return response.ConfigurationData.ToDictionary(x => x.Key, x => x.Value);
+        return response.ConfigurationData.ToDictionary(x => x.Key, x => x.Value ?? null);
     }
 
     public void Dispose()
     {
-        _channel?.Dispose();
+        _channel.Dispose();
     }
 }
