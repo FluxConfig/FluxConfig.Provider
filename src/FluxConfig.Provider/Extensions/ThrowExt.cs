@@ -2,7 +2,7 @@ using FluxConfig.Provider.Exceptions;
 
 namespace FluxConfig.Provider.Extensions;
 
-internal class ThrowExt
+internal static class ThrowExt
 {
     internal static void ThrowIfNull(
         object? argument,
