@@ -11,7 +11,10 @@ public sealed class Program
 {
     public static async Task Main()
     {
-        var builder = Host.CreateApplicationBuilder();
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings()
+        {
+            EnvironmentName = Environments.Development
+        });
 
         TestConnectionOptions fluxConnection = builder.Configuration
                                                    .GetSection($"FluxConfigOptions:{nameof(TestConnectionOptions)}")

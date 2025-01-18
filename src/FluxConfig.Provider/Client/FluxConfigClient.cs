@@ -1,12 +1,10 @@
-using System.Diagnostics;
 using FluxConfig.Provider.Client.Interfaces;
 using FluxConfig.Provider.GrpcContracts.Client;
 using Grpc.Net.Client;
 
 namespace FluxConfig.Provider.Client;
 
-// TODO: Change dispose pattern
-internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
+internal sealed class FluxConfigClient : IFluxConfigClient
 {
     private readonly GrpcChannel _channel;
 
@@ -125,6 +123,6 @@ internal sealed class FluxConfigClient : IFluxConfigClient, IDisposable
 
     public void Dispose()
     {
-        _channel.Dispose();
+        _channel?.Dispose();
     }
 }

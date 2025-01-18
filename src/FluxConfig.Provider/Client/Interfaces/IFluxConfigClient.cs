@@ -1,6 +1,6 @@
 namespace FluxConfig.Provider.Client.Interfaces;
 
-internal interface IFluxConfigClient
+internal interface IFluxConfigClient: IDisposable
 {
     public Task<Dictionary<string, string?>> LoadRealTimeConfigAsync(CancellationToken cancellationToken);
 
