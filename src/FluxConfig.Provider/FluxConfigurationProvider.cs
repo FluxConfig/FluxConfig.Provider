@@ -9,8 +9,8 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
     private readonly IFluxConfigClient _fluxConfigClient;
     private readonly TimeSpan _refreshInterval;
     private bool _disposed;
-    private CancellationTokenSource? _cts = null;
-    private Task? _configFetcherTask = null;
+    private CancellationTokenSource? _cts;
+    private Task? _configFetcherTask;
 
     internal FluxConfigurationProvider(IFluxConfigClient client, TimeSpan refreshInterval)
     {
@@ -46,17 +46,17 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
                     }
                     catch (Exception ex)
                     {
-                        // TODO: Add exception handler to provider, e.g logger
+                        // TODO: Add custom exception handler e.g Action<FluxConfigException> => ...
                     }
                 }
-            
+
                 _cts?.Dispose();
-                _fluxConfigClient?.Dispose();
+                _fluxConfigClient.Dispose();
             }
 
             _configFetcherTask = null;
             _cts = null;
-            
+
             _disposed = true;
         }
     }
@@ -67,13 +67,15 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
     }
 
     #endregion
-    
+
     public override void Load()
     {
         if (_disposed)
         {
-            throw new FluxConfigException("", new ObjectDisposedException("FluxConfigurationProvider instance was disposed"));
+            throw new FluxConfigException("",
+                new ObjectDisposedException("FluxConfigurationProvider instance was disposed"));
         }
+
         LoadVaultConfig();
         LoadRealTimeConfig(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 
@@ -85,34 +87,27 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
         _cts = new CancellationTokenSource();
         var cancellationToken = _cts.Token;
 
-        _configFetcherTask ??=
-            Task.Run(async () => await FetchRealTimeConfigTask(cancellationToken), cancellationToken);
+        _configFetcherTask ??= FetchRealTimeConfigTask(cancellationToken);
     }
 
-    //TODO: rework for exception handling
     private async Task FetchRealTimeConfigTask(CancellationToken cancellationToken)
     {
         do
         {
             await Task.Delay(_refreshInterval, cancellationToken);
-            
             try
             {
                 await LoadRealTimeConfig(cancellationToken);
             }
-            catch (FluxConfigException ex)
-            {
-                
-            }
             catch (Exception ex)
             {
-                // TODO: Add exception handler to provider, e.g logger
+                // TODO: Add custom exception handler e.g Action<FluxConfigException> => ...
+                Console.WriteLine($"Got exception: {ex.Message}");
             }
             
         } while (!cancellationToken.IsCancellationRequested);
     }
 
-    //TODO: rework for exception handling
     private async Task LoadRealTimeConfig(CancellationToken cancellationToken)
     {
         Dictionary<string, string?> currentData = await _fluxConfigClient.LoadRealTimeConfigAsync(cancellationToken);

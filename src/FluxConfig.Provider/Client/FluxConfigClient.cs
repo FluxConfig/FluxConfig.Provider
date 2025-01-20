@@ -1,6 +1,8 @@
 using FluxConfig.Provider.Client.Interfaces;
+using FluxConfig.Provider.Exceptions;
 using FluxConfig.Provider.Extensions;
 using FluxConfig.Provider.GrpcContracts.Client;
+using FluxConfig.Provider.Options.Enums;
 using Grpc.Core;
 using Grpc.Net.Client;
 
@@ -9,12 +11,14 @@ namespace FluxConfig.Provider.Client;
 internal sealed class FluxConfigClient : IFluxConfigClient
 {
     private readonly GrpcChannel _channel;
-
+    private readonly PollingExceptionBehavior _pollingExceptionBehavior;
+    private  bool _initialRequest = true;
     private readonly string _configurationTag;
 
-    internal FluxConfigClient(GrpcChannel channel, string configurationTag)
+    internal FluxConfigClient(GrpcChannel channel, PollingExceptionBehavior exceptionBehavior, string configurationTag)
     {
         _channel = channel;
+        _pollingExceptionBehavior = exceptionBehavior;
         _configurationTag = configurationTag;
     }
 
@@ -22,22 +26,37 @@ internal sealed class FluxConfigClient : IFluxConfigClient
     {
         try
         {
-            return await LoadRealTimeConfigAsyncUnsafe(
+            var fetchedConfig = await LoadRealTimeConfigAsyncUnsafe(
                 channel: _channel,
                 configurationTag: _configurationTag,
                 cancellationToken: cancellationToken);
+            
+            _initialRequest = false;
+            
+            return fetchedConfig;
         }
-        //TODO: rework for exception handling
+        // TODO: Add custom FluxConfig logger
         catch (RpcException exception)
         {
-            // Вызывать ThrowExt метод для обработки RPC ошибок
-            // Падать в случае Auth, UN, NF
-            // Работать с логом в случае с IE, BR
-            Console.WriteLine($"Exception occured while fetching realtime config data: {exception.Message}");
+            var fluxException = exception.GenerateFluxConfigException();
+
+            if (_initialRequest || _pollingExceptionBehavior == PollingExceptionBehavior.Throw)
+            {
+                Console.WriteLine($"Exception occured while fetching realtime config data: {fluxException.Message}");
+                throw fluxException;
+            }
+
+            Console.WriteLine($"Exception occured while fetching realtime config data: {fluxException.Message}");
             return new Dictionary<string, string?>();
         }
         catch (Exception ex)
         {
+            if (_initialRequest || _pollingExceptionBehavior == PollingExceptionBehavior.Throw)
+            {
+                Console.WriteLine($"Exception occured while fetching realtime config data: {ex.Message}");
+                throw new FluxConfigException("", ex);
+            }
+
             Console.WriteLine($"Exception occured while fetching realtime config data: {ex.Message}");
             return new Dictionary<string, string?>();
         }

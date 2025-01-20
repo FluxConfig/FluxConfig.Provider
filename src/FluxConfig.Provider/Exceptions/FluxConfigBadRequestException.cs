@@ -10,4 +10,9 @@ public class FluxConfigBadRequestException: FluxConfigException
     {
         _requestViolations = fieldViolations;
     }
+
+    public IDictionary<string, string> RpcRequestViolations
+    {
+        get => _requestViolations;
+    }
 }

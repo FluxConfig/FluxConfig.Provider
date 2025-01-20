@@ -16,7 +16,7 @@ internal static class RpcExceptionExtensions
             StatusCode.InvalidArgument => GenerateBrException(exc),
             StatusCode.Unauthenticated => GenerateUnauthenticatedException(exc),
             StatusCode.Unavailable => new FluxConfigException("Unable to establish connection with FluxConfig.Storage service.", exc),
-            _ => new FluxConfigException("", exc)
+            _ => new FluxConfigException("Unexpected rpc exception occured.", exc)
         };
 
         return exception;

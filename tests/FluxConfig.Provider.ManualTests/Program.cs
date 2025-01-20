@@ -1,5 +1,6 @@
 ﻿using FluxConfig.Provider.ManualTests.Options;
 using FluxConfig.Provider.Options;
+using FluxConfig.Provider.Options.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,22 +24,25 @@ public sealed class Program
 
         builder.Configuration.AddFluxConfig(options =>
         {
-            options.ConnectionOptions = new ConnectionOptions(
-                address: new Uri(fluxConnection.StorageUrl),
-                apiKey: fluxConnection.ApiKey
-            );
+            options.ConnectionOptions = new ConnectionOptions
+            {
+                Address = new Uri(fluxConnection.StorageUrl),
+                ApiKey = fluxConnection.ApiKey
+            };
+            options.PollingOptions = new FluxPollingOptions
+            {
+                ExceptionBehavior = PollingExceptionBehavior.Throw,
+                RefreshInterval = TimeSpan.FromSeconds(2)
+            };
             options.ConfigurationTag = fluxConnection.ConfigurationTag;
-            options.RefreshInterval = TimeSpan.FromSeconds(5);
         });
 
         builder.Services.Configure<SimpleOptions>(
             builder.Configuration.GetSection("SimpleOptions"));
 
         using var host = builder.Build();
-
-        var testOptionsMonitor = host.Services.GetRequiredService<IOptionsMonitor<SimpleOptions>>();
         
-        await host.RunAsync();
+        var testOptionsMonitor = host.Services.GetRequiredService<IOptionsMonitor<SimpleOptions>>();
         
         await Task.Run(async () =>
         {
@@ -47,7 +51,7 @@ public sealed class Program
                 var options = testOptionsMonitor.CurrentValue;
                 
                 Console.WriteLine($"{options.StringConfig}\n{options.IntConfig}\n{options.BoolConfig}\n");
-                await Task.Delay(TimeSpan.FromSeconds(5));
+                await Task.Delay(TimeSpan.FromSeconds(2));
             } while (true);
         });
     }

@@ -14,18 +14,20 @@ internal sealed class FluxConfigurationSource: IConfigurationSource
     {
         return new FluxConfigurationProvider(
             client: BuildConfigClient(ConfigOptions),
-            refreshInterval: ConfigOptions!.RefreshInterval
+            refreshInterval: ConfigOptions!.PollingOptions!.RefreshInterval
         );
     }
     
     private static FluxConfigClient BuildConfigClient(FluxConfigOptions? options)
     {
         ThrowExt.ThrowIfNull(options, nameof(options));
-        ThrowExt.ThrowIfNull(options!.ConnectionOptions, nameof(options.ConnectionOptions));
+        ThrowExt.ThrowIfNull(options!.PollingOptions, nameof(options.PollingOptions));
+        ThrowExt.ThrowIfNull(options.ConnectionOptions, nameof(options.ConnectionOptions));
         ThrowExt.ThrowIfNull(options.ConfigurationTag, nameof(options.ConfigurationTag));
 
         return new FluxConfigClient(
             channel: BuildGrpcChannel(options.ConnectionOptions!),
+            exceptionBehavior: options.PollingOptions!.ExceptionBehavior,
             configurationTag: options.ConfigurationTag!
         );
     }
