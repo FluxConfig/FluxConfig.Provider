@@ -40,6 +40,10 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
                     {
                         _configFetcherTask.ConfigureAwait(false).GetAwaiter().GetResult();
                     }
+                    catch (OperationCanceledException)
+                    {
+                        // Expected exception during disposing
+                    }
                     catch (Exception ex)
                     {
                         // TODO: Add exception handler to provider, e.g logger
@@ -64,7 +68,6 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
 
     #endregion
     
-
     public override void Load()
     {
         if (_disposed)
@@ -72,6 +75,7 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
             throw new FluxConfigException("", new ObjectDisposedException("FluxConfigurationProvider instance was disposed"));
         }
         LoadVaultConfig();
+        LoadRealTimeConfig(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 
         if (_cts != null)
         {
@@ -88,20 +92,24 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
     //TODO: rework for exception handling
     private async Task FetchRealTimeConfigTask(CancellationToken cancellationToken)
     {
-        await LoadRealTimeConfig(cancellationToken);
-        
-        using PeriodicTimer periodicTimer = new PeriodicTimer(_refreshInterval);
-        try
+        do
         {
-            while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
+            await Task.Delay(_refreshInterval, cancellationToken);
+            
+            try
             {
                 await LoadRealTimeConfig(cancellationToken);
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected exception during disposing
-        }
+            catch (FluxConfigException ex)
+            {
+                
+            }
+            catch (Exception ex)
+            {
+                // TODO: Add exception handler to provider, e.g logger
+            }
+            
+        } while (!cancellationToken.IsCancellationRequested);
     }
 
     //TODO: rework for exception handling
@@ -118,7 +126,6 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
         OnReload();
     }
 
-    //TODO: rework for exception handling
     private void LoadVaultConfig()
     {
         Dictionary<string, string?> currentData = _fluxConfigClient.LoadVaultConfig();

@@ -35,7 +35,6 @@ internal sealed class FluxConfigurationSource: IConfigurationSource
         ThrowExt.ThrowIfNull(options.Address, nameof(options.Address));
         ThrowExt.ThrowIfNull(options.ApiKey, nameof(options.ApiKey));
 
-        // TODO: Make sure interceptor works for sync calls
         var credentials = CallCredentials.FromInterceptor((context, metadata) =>
         {
             metadata.Add(ConnectionOptions.ApiKeyHeader, options.ApiKey!);
@@ -44,7 +43,7 @@ internal sealed class FluxConfigurationSource: IConfigurationSource
 
         var channel = GrpcChannel.ForAddress(
             address: options.Address!,
-            channelOptions: new GrpcChannelOptions()
+            channelOptions: new GrpcChannelOptions
             {
                 Credentials = ChannelCredentials.Create(new SslCredentials(), credentials)
             });

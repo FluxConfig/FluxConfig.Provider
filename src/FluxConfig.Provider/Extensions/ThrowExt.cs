@@ -10,11 +10,11 @@ internal static class ThrowExt
     {
         if (argument is null)
         {
-            Throw(paramName);
+            ThrowNull(paramName);
         }
     }
 
-    private static void Throw(string? paramName)
+    private static void ThrowNull(string? paramName)
     {
         throw new FluxConfigException("", new ArgumentNullException(paramName));
     }

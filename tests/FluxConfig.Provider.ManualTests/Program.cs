@@ -37,7 +37,9 @@ public sealed class Program
         using var host = builder.Build();
 
         var testOptionsMonitor = host.Services.GetRequiredService<IOptionsMonitor<SimpleOptions>>();
-
+        
+        await host.RunAsync();
+        
         await Task.Run(async () =>
         {
             do

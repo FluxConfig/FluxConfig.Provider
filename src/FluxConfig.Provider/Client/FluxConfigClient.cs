@@ -1,5 +1,7 @@
 using FluxConfig.Provider.Client.Interfaces;
+using FluxConfig.Provider.Extensions;
 using FluxConfig.Provider.GrpcContracts.Client;
+using Grpc.Core;
 using Grpc.Net.Client;
 
 namespace FluxConfig.Provider.Client;
@@ -26,9 +28,17 @@ internal sealed class FluxConfigClient : IFluxConfigClient
                 cancellationToken: cancellationToken);
         }
         //TODO: rework for exception handling
+        catch (RpcException exception)
+        {
+            // Вызывать ThrowExt метод для обработки RPC ошибок
+            // Падать в случае Auth, UN, NF
+            // Работать с логом в случае с IE, BR
+            Console.WriteLine($"Exception occured while fetching realtime config data: {exception.Message}");
+            return new Dictionary<string, string?>();
+        }
         catch (Exception ex)
         {
-            Console.WriteLine($"Exception occured while fetching config data: {ex.Message}");
+            Console.WriteLine($"Exception occured while fetching realtime config data: {ex.Message}");
             return new Dictionary<string, string?>();
         }
     }
@@ -61,11 +71,10 @@ internal sealed class FluxConfigClient : IFluxConfigClient
                 cancellationToken: cancellationToken
             );
         }
-        //TODO: rework for exception handling
-        catch (Exception ex)
+        catch (RpcException exception)
         {
-            Console.WriteLine($"Exception occured while fetching config data: {ex.Message}");
-            return new Dictionary<string, string?>();
+            var fluxException = exception.GenerateFluxConfigException();
+            throw fluxException;
         }
     }
 
@@ -96,11 +105,10 @@ internal sealed class FluxConfigClient : IFluxConfigClient
                 configurationTag: _configurationTag
             );
         }
-        //TODO: rework for exception handling
-        catch (Exception ex)
+        catch (RpcException exception)
         {
-            Console.WriteLine($"Exception occured while fetching config data: {ex.Message}");
-            return new Dictionary<string, string?>();
+            var fluxException = exception.GenerateFluxConfigException();
+            throw fluxException;
         }
     }
 
