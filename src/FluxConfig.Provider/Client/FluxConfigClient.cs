@@ -38,11 +38,10 @@ internal sealed class FluxConfigClient : IFluxConfigClient
         // TODO: Add custom FluxConfig logger
         catch (RpcException exception)
         {
-            var fluxException = exception.GenerateFluxConfigException();
+            FluxConfigException fluxException = exception.GenerateFluxConfigException();
 
             if (_initialRequest || _pollingExceptionBehavior == PollingExceptionBehavior.Throw)
             {
-                Console.WriteLine($"Exception occured while fetching realtime config data: {fluxException.Message}");
                 throw fluxException;
             }
 
@@ -53,8 +52,7 @@ internal sealed class FluxConfigClient : IFluxConfigClient
         {
             if (_initialRequest || _pollingExceptionBehavior == PollingExceptionBehavior.Throw)
             {
-                Console.WriteLine($"Exception occured while fetching realtime config data: {ex.Message}");
-                throw new FluxConfigException("", ex);
+                throw;
             }
 
             Console.WriteLine($"Exception occured while fetching realtime config data: {ex.Message}");

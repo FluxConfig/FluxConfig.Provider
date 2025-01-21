@@ -1,4 +1,5 @@
 using FluxConfig.Provider.Client;
+using FluxConfig.Provider.Exceptions;
 using FluxConfig.Provider.Extensions;
 using FluxConfig.Provider.Options;
 using Grpc.Core;
@@ -7,17 +8,28 @@ using Microsoft.Extensions.Configuration;
 
 namespace FluxConfig.Provider;
 
-internal sealed class FluxConfigurationSource: IConfigurationSource
+internal sealed class FluxConfigurationSource : IConfigurationSource
 {
     public FluxConfigOptions? ConfigOptions { get; set; }
+
     public IConfigurationProvider Build(IConfigurationBuilder builder)
     {
         return new FluxConfigurationProvider(
             client: BuildConfigClient(ConfigOptions),
+            handler: BuildExceptionHandler(builder),
             refreshInterval: ConfigOptions!.PollingOptions!.RefreshInterval
         );
     }
-    
+
+    private static Action<FluxConfigExceptionContext> BuildExceptionHandler(IConfigurationBuilder builder)
+    {
+        return builder.GetFluxConfigExceptionHandler() ?? (exceptionContext =>
+        {
+            // TODO: Change, Add custom FluxConfig logger
+            Console.WriteLine($"Handler: Exception occured while fetching config data: {exceptionContext.Exception?.Message}");
+        });
+    }
+
     private static FluxConfigClient BuildConfigClient(FluxConfigOptions? options)
     {
         ThrowExt.ThrowIfNull(options, nameof(options));

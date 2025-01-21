@@ -4,17 +4,20 @@ using Microsoft.Extensions.Configuration;
 
 namespace FluxConfig.Provider;
 
-internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposable
+public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposable
 {
     private readonly IFluxConfigClient _fluxConfigClient;
     private readonly TimeSpan _refreshInterval;
+    private readonly Action<FluxConfigExceptionContext> _exceptionHandler;
     private bool _disposed;
     private CancellationTokenSource? _cts;
     private Task? _configFetcherTask;
 
-    internal FluxConfigurationProvider(IFluxConfigClient client, TimeSpan refreshInterval)
+    internal FluxConfigurationProvider(IFluxConfigClient client, Action<FluxConfigExceptionContext> handler,
+        TimeSpan refreshInterval)
     {
         _fluxConfigClient = client;
+        _exceptionHandler = handler;
         _refreshInterval = refreshInterval;
     }
 
@@ -46,7 +49,12 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
                     }
                     catch (Exception ex)
                     {
-                        // TODO: Add custom exception handler e.g Action<FluxConfigException> => ...
+                        _exceptionHandler(new FluxConfigExceptionContext
+                            {
+                                Exception = ex,
+                                Provider = this
+                            }
+                        );
                     }
                 }
 
@@ -101,10 +109,13 @@ internal sealed class FluxConfigurationProvider : ConfigurationProvider, IDispos
             }
             catch (Exception ex)
             {
-                // TODO: Add custom exception handler e.g Action<FluxConfigException> => ...
-                Console.WriteLine($"Got exception: {ex.Message}");
+                _exceptionHandler(new FluxConfigExceptionContext
+                    {
+                        Exception = ex,
+                        Provider = this
+                    }
+                );
             }
-            
         } while (!cancellationToken.IsCancellationRequested);
     }
 

@@ -32,10 +32,17 @@ public sealed class Program
             options.PollingOptions = new FluxPollingOptions
             {
                 ExceptionBehavior = PollingExceptionBehavior.Throw,
-                RefreshInterval = TimeSpan.FromSeconds(2)
+                RefreshInterval = TimeSpan.FromSeconds(10)
             };
             options.ConfigurationTag = fluxConnection.ConfigurationTag;
         });
+        
+        // Example of termination due to exception handler
+        // builder.Configuration.SetFluxConfigExceptionHandler(ctx =>
+        // {
+        //     Console.WriteLine($"Handler: Exception occured while fetching config data: {ctx.Exception?.Message}");
+        //     Environment.Exit(-1);
+        // });
 
         builder.Services.Configure<SimpleOptions>(
             builder.Configuration.GetSection("SimpleOptions"));
@@ -51,7 +58,7 @@ public sealed class Program
                 var options = testOptionsMonitor.CurrentValue;
                 
                 Console.WriteLine($"{options.StringConfig}\n{options.IntConfig}\n{options.BoolConfig}\n");
-                await Task.Delay(TimeSpan.FromSeconds(2));
+                await Task.Delay(TimeSpan.FromSeconds(10));
             } while (true);
         });
     }
