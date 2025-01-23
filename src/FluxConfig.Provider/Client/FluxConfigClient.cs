@@ -2,6 +2,7 @@ using FluxConfig.Provider.Client.Interfaces;
 using FluxConfig.Provider.Exceptions;
 using FluxConfig.Provider.Extensions;
 using FluxConfig.Provider.GrpcContracts.Client;
+using FluxConfig.Provider.Logging;
 using FluxConfig.Provider.Options.Enums;
 using Grpc.Core;
 using Grpc.Net.Client;
@@ -33,12 +34,24 @@ internal sealed class FluxConfigClient : IFluxConfigClient
     {
         try
         {
+            _logger.LogConfigDataFetchStart(
+                curTime: DateTime.Now,
+                configType: "RealTime",
+                storageAddress: _channel.Target
+                );
+            
             var fetchedConfig = await LoadRealTimeConfigAsyncUnsafe(
                 channel: _channel,
                 configurationTag: _configurationTag,
                 cancellationToken: cancellationToken);
 
             _initialRequest = false;
+            
+            _logger.LogConfigDataFetchFinish(
+                curTime: DateTime.Now,
+                configType: "RealTime",
+                storageAddress: _channel.Target
+            );
 
             return fetchedConfig;
         }
@@ -51,8 +64,11 @@ internal sealed class FluxConfigClient : IFluxConfigClient
                 throw fluxException;
             }
             
-            // TODO: Change to compile-time extensions
-            _logger.LogWarning("Exception occured while fetching realtime config data: {message}", fluxException.Message);
+            _logger.LogException(
+                configType: "RealTime",
+                curTime: DateTime.Now,
+                exceptionMessage: fluxException.Message + $"\n{fluxException.InnerException?.Message}"
+                );
             return new Dictionary<string, string?>();
         }
         catch (Exception ex)
@@ -62,8 +78,11 @@ internal sealed class FluxConfigClient : IFluxConfigClient
                 throw;
             }
             
-            // TODO: Change to compile-time extensions
-            _logger.LogWarning("Exception occured while fetching realtime config data: {message}", ex.Message);
+            _logger.LogException(
+                configType: "RealTime",
+                curTime: DateTime.Now,
+                exceptionMessage: ex.Message
+            );
             return new Dictionary<string, string?>();
         }
     }
@@ -90,15 +109,35 @@ internal sealed class FluxConfigClient : IFluxConfigClient
     {
         try
         {
-            return await LoadVaultConfigAsyncUnsafe(
+            _logger.LogConfigDataFetchStart(
+                curTime: DateTime.Now,
+                configType: "Vault",
+                storageAddress: _channel.Target
+            );
+            
+            var fetchedConfig =  await LoadVaultConfigAsyncUnsafe(
                 channel: _channel,
                 configurationTag: _configurationTag,
                 cancellationToken: cancellationToken
             );
+            
+            _logger.LogConfigDataFetchFinish(
+                curTime: DateTime.Now,
+                configType: "Vault",
+                storageAddress: _channel.Target
+            );
+
+            return fetchedConfig;
         }
         catch (RpcException exception)
         {
             var fluxException = exception.GenerateFluxConfigException();
+            
+            _logger.LogException(
+                configType: "Vault",
+                curTime: DateTime.Now,
+                exceptionMessage: fluxException.Message
+            );
             throw fluxException;
         }
     }
@@ -125,14 +164,34 @@ internal sealed class FluxConfigClient : IFluxConfigClient
     {
         try
         {
-            return LoadVaultConfigUnsafe(
+            _logger.LogConfigDataFetchStart(
+                curTime: DateTime.Now,
+                configType: "Vault",
+                storageAddress: _channel.Target
+            );
+            
+            var fetchedConfig = LoadVaultConfigUnsafe(
                 channel: _channel,
                 configurationTag: _configurationTag
             );
+            
+            _logger.LogConfigDataFetchFinish(
+                curTime: DateTime.Now,
+                configType: "Vault",
+                storageAddress: _channel.Target
+            );
+
+            return fetchedConfig;
         }
         catch (RpcException exception)
         {
             var fluxException = exception.GenerateFluxConfigException();
+            
+            _logger.LogException(
+                configType: "Vault",
+                curTime: DateTime.Now,
+                exceptionMessage: fluxException.Message
+            );
             throw fluxException;
         }
     }
@@ -156,6 +215,6 @@ internal sealed class FluxConfigClient : IFluxConfigClient
 
     public void Dispose()
     {
-        _channel?.Dispose();
+        _channel.Dispose();
     }
 }

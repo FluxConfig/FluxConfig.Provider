@@ -32,7 +32,7 @@ public sealed class Program
             };
             options.PollingOptions = new FluxPollingOptions
             {
-                ExceptionBehavior = PollingExceptionBehavior.Throw,
+                ExceptionBehavior = PollingExceptionBehavior.Ignore,
                 RefreshInterval = TimeSpan.FromSeconds(10)
             };
             options.ConfigurationTag = fluxConnection.ConfigurationTag;
@@ -40,7 +40,7 @@ public sealed class Program
             options.LoggerFactory = LoggerFactory.Create(optionsBuilder =>
             {
                 optionsBuilder.AddConsole();
-                optionsBuilder.SetMinimumLevel(LogLevel.Critical);
+                optionsBuilder.SetMinimumLevel(LogLevel.Information);
             });
         });
         

@@ -1,5 +1,6 @@
 using FluxConfig.Provider.Client.Interfaces;
 using FluxConfig.Provider.Exceptions;
+using FluxConfig.Provider.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -89,6 +90,8 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
     public override void Load()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        
+        _logger.StartProviderExecution(DateTime.Now);
         
         LoadVaultConfig();
         LoadRealTimeConfig(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();

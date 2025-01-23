@@ -1,6 +1,7 @@
 using FluxConfig.Provider.Client;
 using FluxConfig.Provider.Exceptions;
 using FluxConfig.Provider.Extensions;
+using FluxConfig.Provider.Logging;
 using FluxConfig.Provider.Options;
 using Grpc.Core;
 using Grpc.Net.Client;
@@ -40,8 +41,10 @@ internal sealed class FluxConfigurationSource : IConfigurationSource
     {
         return builder.GetFluxConfigExceptionHandler() ?? (exceptionContext =>
         {
-            exceptionContext.Logger.LogWarning("Handler: Exception occured while fetching config data: {message}",
-                exceptionContext.Exception?.Message);
+            exceptionContext.Logger.LogDefaultHandlerException(
+                curTime: DateTime.Now,
+                exceptionMessage: exceptionContext.Exception?.Message
+            );
         });
     }
 
@@ -53,14 +56,14 @@ internal sealed class FluxConfigurationSource : IConfigurationSource
         ThrowExt.ThrowIfNull(options.ConfigurationTag, nameof(options.ConfigurationTag));
 
         return new FluxConfigClient(
-            channel: BuildGrpcChannel(options.ConnectionOptions!),
+            channel: BuildGrpcChannel(options.ConnectionOptions!, options.LoggerFactory!),
             logger: options.LoggerFactory!.CreateLogger<FluxConfigClient>(),
             exceptionBehavior: options.PollingOptions!.ExceptionBehavior,
             configurationTag: options.ConfigurationTag!
         );
     }
 
-    private static GrpcChannel BuildGrpcChannel(ConnectionOptions options)
+    private static GrpcChannel BuildGrpcChannel(ConnectionOptions options, ILoggerFactory loggerFactory)
     {
         ThrowExt.ThrowIfNull(options.Address, nameof(options.Address));
         ThrowExt.ThrowIfNull(options.ApiKey, nameof(options.ApiKey));
@@ -75,6 +78,7 @@ internal sealed class FluxConfigurationSource : IConfigurationSource
             address: options.Address!,
             channelOptions: new GrpcChannelOptions
             {
+                LoggerFactory = loggerFactory,
                 Credentials = ChannelCredentials.Create(new SslCredentials(), credentials)
             });
 
