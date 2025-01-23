@@ -4,6 +4,7 @@ using FluxConfig.Provider.Options.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace FluxConfig.Provider.ManualTests;
@@ -35,12 +36,18 @@ public sealed class Program
                 RefreshInterval = TimeSpan.FromSeconds(10)
             };
             options.ConfigurationTag = fluxConnection.ConfigurationTag;
+            
+            options.LoggerFactory = LoggerFactory.Create(optionsBuilder =>
+            {
+                optionsBuilder.AddConsole();
+                optionsBuilder.SetMinimumLevel(LogLevel.Critical);
+            });
         });
         
         // Example of termination due to exception handler
         // builder.Configuration.SetFluxConfigExceptionHandler(ctx =>
         // {
-        //     Console.WriteLine($"Handler: Exception occured while fetching config data: {ctx.Exception?.Message}");
+        //     ctx.Logger.LogWarning("Handler: Exception occured while fetching config data: {message}", ctx.Exception?.Message);
         //     Environment.Exit(-1);
         // });
 

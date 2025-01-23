@@ -5,19 +5,26 @@ using FluxConfig.Provider.GrpcContracts.Client;
 using FluxConfig.Provider.Options.Enums;
 using Grpc.Core;
 using Grpc.Net.Client;
+using Microsoft.Extensions.Logging;
 
 namespace FluxConfig.Provider.Client;
 
 internal sealed class FluxConfigClient : IFluxConfigClient
 {
     private readonly GrpcChannel _channel;
+    private readonly ILogger<FluxConfigClient> _logger;
     private readonly PollingExceptionBehavior _pollingExceptionBehavior;
-    private  bool _initialRequest = true;
+    private bool _initialRequest = true;
     private readonly string _configurationTag;
 
-    internal FluxConfigClient(GrpcChannel channel, PollingExceptionBehavior exceptionBehavior, string configurationTag)
+    internal FluxConfigClient(
+        GrpcChannel channel,
+        ILogger<FluxConfigClient> logger,
+        PollingExceptionBehavior exceptionBehavior,
+        string configurationTag)
     {
         _channel = channel;
+        _logger = logger;
         _pollingExceptionBehavior = exceptionBehavior;
         _configurationTag = configurationTag;
     }
@@ -30,12 +37,11 @@ internal sealed class FluxConfigClient : IFluxConfigClient
                 channel: _channel,
                 configurationTag: _configurationTag,
                 cancellationToken: cancellationToken);
-            
+
             _initialRequest = false;
-            
+
             return fetchedConfig;
         }
-        // TODO: Add custom FluxConfig logger
         catch (RpcException exception)
         {
             FluxConfigException fluxException = exception.GenerateFluxConfigException();
@@ -44,8 +50,9 @@ internal sealed class FluxConfigClient : IFluxConfigClient
             {
                 throw fluxException;
             }
-
-            Console.WriteLine($"Exception occured while fetching realtime config data: {fluxException.Message}");
+            
+            // TODO: Change to compile-time extensions
+            _logger.LogWarning("Exception occured while fetching realtime config data: {message}", fluxException.Message);
             return new Dictionary<string, string?>();
         }
         catch (Exception ex)
@@ -54,8 +61,9 @@ internal sealed class FluxConfigClient : IFluxConfigClient
             {
                 throw;
             }
-
-            Console.WriteLine($"Exception occured while fetching realtime config data: {ex.Message}");
+            
+            // TODO: Change to compile-time extensions
+            _logger.LogWarning("Exception occured while fetching realtime config data: {message}", ex.Message);
             return new Dictionary<string, string?>();
         }
     }

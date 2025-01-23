@@ -1,6 +1,7 @@
 using FluxConfig.Provider.Client.Interfaces;
 using FluxConfig.Provider.Exceptions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace FluxConfig.Provider;
 
@@ -9,14 +10,21 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
     private readonly IFluxConfigClient _fluxConfigClient;
     private readonly TimeSpan _refreshInterval;
     private readonly Action<FluxConfigExceptionContext> _exceptionHandler;
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly ILogger<FluxConfigurationProvider> _logger;
     private bool _disposed;
     private CancellationTokenSource? _cts;
     private Task? _configFetcherTask;
 
-    internal FluxConfigurationProvider(IFluxConfigClient client, Action<FluxConfigExceptionContext> handler,
+    internal FluxConfigurationProvider(
+        IFluxConfigClient client,
+        ILoggerFactory loggerFactory,
+        Action<FluxConfigExceptionContext> handler,
         TimeSpan refreshInterval)
     {
         _fluxConfigClient = client;
+        _loggerFactory = loggerFactory;
+        _logger = _loggerFactory.CreateLogger<FluxConfigurationProvider>();
         _exceptionHandler = handler;
         _refreshInterval = refreshInterval;
     }
@@ -52,6 +60,7 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
                         _exceptionHandler(new FluxConfigExceptionContext
                             {
                                 Exception = ex,
+                                Logger = _loggerFactory.CreateLogger<FluxConfigExceptionContext>(),
                                 Provider = this
                             }
                         );
@@ -60,6 +69,7 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
 
                 _cts?.Dispose();
                 _fluxConfigClient.Dispose();
+                _loggerFactory.Dispose();
             }
 
             _configFetcherTask = null;
@@ -78,12 +88,8 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
 
     public override void Load()
     {
-        if (_disposed)
-        {
-            throw new FluxConfigException("",
-                new ObjectDisposedException("FluxConfigurationProvider instance was disposed"));
-        }
-
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        
         LoadVaultConfig();
         LoadRealTimeConfig(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 
@@ -112,6 +118,7 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
                 _exceptionHandler(new FluxConfigExceptionContext
                     {
                         Exception = ex,
+                        Logger = _loggerFactory.CreateLogger<FluxConfigExceptionContext>(),
                         Provider = this
                     }
                 );
