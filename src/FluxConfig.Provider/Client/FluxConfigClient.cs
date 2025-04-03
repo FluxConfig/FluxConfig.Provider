@@ -18,6 +18,8 @@ internal sealed class FluxConfigClient : IFluxConfigClient
     private bool _initialRequest = true;
     private readonly string _configurationTag;
 
+    public string Address => _channel.Target;
+
     internal FluxConfigClient(
         GrpcChannel channel,
         ILogger<FluxConfigClient> logger,
@@ -29,15 +31,18 @@ internal sealed class FluxConfigClient : IFluxConfigClient
         _pollingExceptionBehavior = exceptionBehavior;
         _configurationTag = configurationTag;
     }
+    
+    public void Dispose()
+    {
+        _channel.Dispose();
+    }
 
     public async Task<Dictionary<string, string?>> LoadRealTimeConfigAsync(CancellationToken cancellationToken)
     {
         try
         {
             _logger.LogConfigDataFetchStart(
-                curTime: DateTime.Now,
-                configType: "RealTime",
-                storageAddress: _channel.Target
+                configType: "RealTime"
                 );
             
             var fetchedConfig = await LoadRealTimeConfigAsyncUnsafe(
@@ -48,9 +53,7 @@ internal sealed class FluxConfigClient : IFluxConfigClient
             _initialRequest = false;
             
             _logger.LogConfigDataFetchFinish(
-                curTime: DateTime.Now,
-                configType: "RealTime",
-                storageAddress: _channel.Target
+                configType: "RealTime"
             );
 
             return fetchedConfig;
@@ -66,7 +69,6 @@ internal sealed class FluxConfigClient : IFluxConfigClient
             
             _logger.LogException(
                 configType: "RealTime",
-                curTime: DateTime.Now,
                 exceptionMessage: fluxException.Message + $"\n{fluxException.InnerException?.Message}"
                 );
             return new Dictionary<string, string?>();
@@ -80,7 +82,6 @@ internal sealed class FluxConfigClient : IFluxConfigClient
             
             _logger.LogException(
                 configType: "RealTime",
-                curTime: DateTime.Now,
                 exceptionMessage: ex.Message
             );
             return new Dictionary<string, string?>();
@@ -110,9 +111,7 @@ internal sealed class FluxConfigClient : IFluxConfigClient
         try
         {
             _logger.LogConfigDataFetchStart(
-                curTime: DateTime.Now,
-                configType: "Vault",
-                storageAddress: _channel.Target
+                configType: "Vault"
             );
             
             var fetchedConfig =  await LoadVaultConfigAsyncUnsafe(
@@ -122,9 +121,7 @@ internal sealed class FluxConfigClient : IFluxConfigClient
             );
             
             _logger.LogConfigDataFetchFinish(
-                curTime: DateTime.Now,
-                configType: "Vault",
-                storageAddress: _channel.Target
+                configType: "Vault"
             );
 
             return fetchedConfig;
@@ -135,7 +132,6 @@ internal sealed class FluxConfigClient : IFluxConfigClient
             
             _logger.LogException(
                 configType: "Vault",
-                curTime: DateTime.Now,
                 exceptionMessage: fluxException.Message
             );
             throw fluxException;
@@ -150,7 +146,7 @@ internal sealed class FluxConfigClient : IFluxConfigClient
         var client = new Storage.StorageClient(channel);
 
         var response = await client.LoadVaultConfigAsync(
-            request: new LoadConfigRequest()
+            request: new LoadConfigRequest
             {
                 ConfigurationTag = configurationTag
             },
@@ -165,9 +161,7 @@ internal sealed class FluxConfigClient : IFluxConfigClient
         try
         {
             _logger.LogConfigDataFetchStart(
-                curTime: DateTime.Now,
-                configType: "Vault",
-                storageAddress: _channel.Target
+                configType: "Vault"
             );
             
             var fetchedConfig = LoadVaultConfigUnsafe(
@@ -176,9 +170,7 @@ internal sealed class FluxConfigClient : IFluxConfigClient
             );
             
             _logger.LogConfigDataFetchFinish(
-                curTime: DateTime.Now,
-                configType: "Vault",
-                storageAddress: _channel.Target
+                configType: "Vault"
             );
 
             return fetchedConfig;
@@ -189,7 +181,6 @@ internal sealed class FluxConfigClient : IFluxConfigClient
             
             _logger.LogException(
                 configType: "Vault",
-                curTime: DateTime.Now,
                 exceptionMessage: fluxException.Message
             );
             throw fluxException;
@@ -212,9 +203,5 @@ internal sealed class FluxConfigClient : IFluxConfigClient
 
         return response.ConfigurationData.ToDictionary(x => x.Key, x => x.Value ?? null);
     }
-
-    public void Dispose()
-    {
-        _channel.Dispose();
-    }
+    
 }

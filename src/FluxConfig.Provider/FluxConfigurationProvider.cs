@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace FluxConfig.Provider;
 
+/// <summary>
+/// FluxConfig System <see cref="ConfigurationProvider"/>
+/// </summary>
 public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposable
 {
     private readonly IFluxConfigClient _fluxConfigClient;
@@ -16,7 +19,7 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
     private bool _disposed;
     private CancellationTokenSource? _cts;
     private Task? _configFetcherTask;
-
+    
     internal FluxConfigurationProvider(
         IFluxConfigClient client,
         ILoggerFactory loggerFactory,
@@ -32,6 +35,9 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
 
     #region IDisposable
 
+    /// <summary>
+    /// Release of unmanaged resources used by <see cref="FluxConfigurationProvider"/> in a thread-safe manner
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);
@@ -87,12 +93,15 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
 
     #endregion
 
+    /// <summary>
+    /// Loads the configuration data from FluxConfig.Storage service via <see cref="Client.FluxConfigClient"/>
+    /// </summary>
     public override void Load()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        
-        _logger.StartProviderExecution(DateTime.Now);
-        
+
+        _logger.StartProviderExecution( _fluxConfigClient.Address);
+
         LoadVaultConfig();
         LoadRealTimeConfig(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 

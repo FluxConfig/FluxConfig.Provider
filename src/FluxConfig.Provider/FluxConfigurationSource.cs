@@ -11,10 +11,21 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FluxConfig.Provider;
 
-internal sealed class FluxConfigurationSource : IConfigurationSource
+/// <summary>
+/// Represents FluxConfig data as an <see cref="IConfigurationSource"/>.
+/// </summary>
+public sealed class FluxConfigurationSource : IConfigurationSource
 {
+    /// <summary>
+    /// Options used for configuring <see cref="FluxConfigurationProvider"/>
+    /// </summary>
     public FluxConfigOptions? ConfigOptions { get; set; }
 
+    /// <summary>
+    /// Builds the <see cref="FluxConfigurationProvider"/> for this source.
+    /// </summary>
+    /// <param name="builder">The <see cref="IConfigurationBuilder"/>.</param>
+    /// <returns>A <see cref="FluxConfigurationProvider"/></returns>
     public IConfigurationProvider Build(IConfigurationBuilder builder)
     {
         ConfigureDefaultLoggerFactory(ConfigOptions);
@@ -42,7 +53,6 @@ internal sealed class FluxConfigurationSource : IConfigurationSource
         return builder.GetFluxConfigExceptionHandler() ?? (exceptionContext =>
         {
             exceptionContext.Logger.LogDefaultHandlerException(
-                curTime: DateTime.Now,
                 exceptionMessage: exceptionContext.Exception?.Message
             );
         });
