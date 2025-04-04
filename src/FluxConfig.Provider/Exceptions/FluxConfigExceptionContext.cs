@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FluxConfig.Provider.Exceptions;
 
@@ -17,10 +18,10 @@ public class FluxConfigExceptionContext
     /// Instance of <see cref="ILogger"/> created by optionally set <see cref="FluxConfig.Provider.Options.FluxConfigOptions.LoggerFactory"/> in
     /// <see cref="FluxConfig.Provider.Options.FluxConfigOptions"/>, if not set use <see cref="Microsoft.Extensions.Logging.Abstractions.NullLogger"/>
     /// </summary>
-    public required ILogger<FluxConfigExceptionContext> Logger { get; set; }
+    public ILogger<FluxConfigExceptionContext> Logger { get; set; } = NullLogger<FluxConfigExceptionContext>.Instance;
     
     /// <summary>
     /// Instance of <see cref="FluxConfigurationProvider"/> which caused an exception
     /// </summary>
-    public required FluxConfigurationProvider Provider { get; set; }
+    public  FluxConfigurationProvider? Provider { get; set; }
 }

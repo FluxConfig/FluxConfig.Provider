@@ -20,6 +20,13 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
     private CancellationTokenSource? _cts;
     private Task? _configFetcherTask;
     
+    /// <summary>
+    /// Initializes new instance of <see cref="FluxConfigurationProvider"/>. All needed parameters and dependencies configured by <see cref="FluxConfig.Provider.Options.FluxConfigOptions"/>.
+    /// </summary>
+    /// <param name="client">Instance of <see cref="FluxConfig.Provider.Client.Interfaces.IFluxConfigClient"/> managing calls to FluxConfig.Storage service.</param>
+    /// <param name="loggerFactory">Optional <see cref="ILoggerFactory"/> for object and its dependencies</param>
+    /// <param name="handler">Internal exceptions handler</param>
+    /// <param name="refreshInterval">Interval of configuration data fetching from FluxConfig system in milliseconds.</param>
     internal FluxConfigurationProvider(
         IFluxConfigClient client,
         ILoggerFactory loggerFactory,
@@ -86,6 +93,9 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
         }
     }
 
+    /// <summary>
+    /// Finalizer
+    /// </summary>
     ~FluxConfigurationProvider()
     {
         Dispose(false);
@@ -98,7 +108,11 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
     /// </summary>
     public override void Load()
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(FluxConfigurationProvider));
+        }
+        
 
         _logger.StartProviderExecution( _fluxConfigClient.Address);
 

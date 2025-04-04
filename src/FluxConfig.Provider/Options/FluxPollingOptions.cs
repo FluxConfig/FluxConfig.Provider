@@ -15,7 +15,7 @@ public class FluxPollingOptions
     private TimeSpan _refreshInterval = TimeSpan.FromMilliseconds(15_000);
 
     /// <summary>
-    /// Interval of configuration data fetching from FluxConfig system in milliseconds. Minimum value - 1000 ms.
+    /// Interval of configuration data fetching from FluxConfig system in milliseconds. Default value - 15 seconds. Minimum value - 1 second.
     /// </summary>
     public TimeSpan RefreshInterval
     {

@@ -1,29 +1,81 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <WarningsAsErrors>nullable</WarningsAsErrors>
+        <PackageId>FluxConfig.Provider</PackageId>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+        <Version>1.0.0-rc.3</Version>
+        <Company>FluxConfig</Company>
+        <Authors>FluxConfig;George Demchenko</Authors>
+        <Title>FluxConfig.Provider</Title>
+        <Description>FluxConfig Microsoft.Extensions.Configuration custom Provider</Description>
+        <PackageProjectUrl>https://github.com/FluxConfig/FluxConfig.Provider</PackageProjectUrl>
+        <PackageReleaseNotes>Release candidate build including core functionality. Fixed XML and project documentation.</PackageReleaseNotes>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageIcon>icon.png</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageTags>library configuration config remoteconfig remote-config feature-flag extensions modular</PackageTags>
+        <Copyright>Copyright (c) FluxConfig 2025</Copyright>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <ServerGarbageCollection>true</ServerGarbageCollection>
-    </PropertyGroup>
-    
     <ItemGroup>
         <Protobuf Include="..\Protos\fluxconfig.proto" GrpcServices="Client"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Google.Protobuf" Version="3.29.3" />
-      <PackageReference Include="Grpc.Net.Client" Version="2.67.0" />
-      <PackageReference Include="Grpc.StatusProto" Version="2.67.0" />
-      <PackageReference Include="Grpc.Tools" Version="2.69.0">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+        <PackageReference Include="Google.Protobuf" Version="3.29.3" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.67.0" />
+        <PackageReference Include="Grpc.StatusProto" Version="2.67.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.69.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
+
+    <PropertyGroup>
+        <!-- Source Link -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+        <!-- Source Link GitHub -->
+        <RepositoryUrl>https://github.com/FluxConfig/FluxConfig.Provider</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+
+        <!-- XML Documentation -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IncludeDocumentation>true</IncludeDocumentation>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+        <None Include="icon.png" Pack="true" Visible="false" PackagePath="" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath=""/>
+    </ItemGroup>
+
+    <Choose>
+        <!-- .NET 6.0 -->
+        <When Condition="'$(TargetFramework)' == 'net6.0'">
+            <ItemGroup>
+                <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.2"/>
+                <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.4"/>
+                
+                <PackageReference Include="System.Text.Json" Version="6.0.11"/>
+            </ItemGroup>
+        </When>
+
+        <!-- .NET 8.0 -->
+        <When Condition="'$(TargetFramework)' == 'net8.0'">
+            <ItemGroup>
+                <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+                <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+            </ItemGroup>
+        </When>
+    </Choose>
 
 </Project>
