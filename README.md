@@ -2,9 +2,7 @@
 
 **FluxConfig Microsoft.Extensions.Configuration custom Provider.**
 
-Introduces a .NET platform-integrated client for interacting with the FluxConfig system.
-Provides automated retrieval and updating of the application's running configuration without
-the need to restart the application or interact with the deployment environment.
+Introduces a .NET platform-integrated client for interacting with the FluxConfig system.Provides automated retrieval and updating of the application's running configuration without the need to restart the application or interact with the deployment environment.
 
 ## Supported runtimes
 
@@ -25,21 +23,14 @@ deployed and ready on your system.
 
 **To learn more about deployment visit [Deployment Guidance](https://github.com/FluxConfig/deployment)**
 
-### 1. Install NuGet [package](https://www.nuget.org/packages/FluxConfig.Provider)
+### 1. Install [NuGet package](https://www.nuget.org/packages/FluxConfig.Provider)
 
 ```shell
 dotnet add package FluxConfig.Provider
 ```
+### 2. Visit deployed [FluxConfig.WebClient](https://github.com/FluxConfig/FluxConfig.WebClient)
 
-or
-
-```shell
-Install-Package FluxConfig.Provider
-```
-
-### 2. Visit [FluxConfig.WebClient](https://github.com/FluxConfig/FluxConfig.WebClient) to get an api key for your application configuration
-
-TBA.
+**To learn more about how to work with FluxConfig visit [General Guidance](https://github.com/FluxConfig/.github/blob/master/profile/README.md)**
 
 ### 3. Add FluxConfig Provider to your application
 
