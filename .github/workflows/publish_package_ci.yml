@@ -40,12 +40,7 @@ jobs:
           dotnet build $PROJECT_PATH --configuration Release --no-restore
       
       - name: Pack
-        run: |
-          dotnet pack $PROJECT_PATH \
-            --configuration Release \
-            -o ./nupkgs \
-            --include-symbols \
-            -p:PackageVersion=${{ steps.get_version.outputs.version }}
+        run: dotnet pack $PROJECT_PATH -c Release -o ./nupkgs --include-symbols -p:PackageVersion=${{ steps.get_version.outputs.version }}
         
       - name: Publish to nuget.org
         run: dotnet nuget push ./nupkgs/*.nupkg -k $NUGET_API_KEY -s $NUGET_PACKAGES_SOURCE
