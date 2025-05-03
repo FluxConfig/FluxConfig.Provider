@@ -1,0 +1,55 @@
+name: "Publish package CI"
+
+on:
+  release:
+    types: [published]
+    
+env:
+  PROJECT_PATH: 'src/FluxConfig.Provider/FluxConfig.Provider.csproj'
+
+jobs:
+  publish_package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      
+    if: startsWith(github.event.release.tag_name, 'v')
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+    
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Extract package version
+        id: get_version
+        run: | 
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Restore and build
+        run: |
+          dotnet restore $PROJECT_PATH
+          dotnet build $PROJECT_PATH --no-restore
+      
+      - name: Pack
+        run: dotnet pack $PROJECT_PATH -c Release -o ./nupkgs \
+          --include-symbols \
+          -p:PackageVersion=${{ steps.get_version.outputs.version }}
+        
+      - name: Publish to nuget.org
+        run: dotnet nuget push ./nupkgs/*.nupkg -k $NUGET_API_KEY -s $NUGET_PACKAGES_SOURCE
+        env:
+          NUGET_PACKAGES_SOURCE: 'https://api.nuget.org/v3/index.json'
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      
+      - name: Publish to GitHub packages
+        run: dotnet nuget push ./nupkgs/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_PACKAGES_SOURCE
+        env:
+          GITHUB_PACKAGES_SOURCE: 'https://nuget.pkg.github.com/FluxConfig/index.json'
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}

@@ -7,13 +7,13 @@
         <WarningsAsErrors>nullable</WarningsAsErrors>
         <PackageId>FluxConfig.Provider</PackageId>
         <ServerGarbageCollection>true</ServerGarbageCollection>
-        <Version>1.0.0-rc.3</Version>
+        <Version>1.0.0</Version>
         <Company>FluxConfig</Company>
         <Authors>FluxConfig;George Demchenko</Authors>
         <Title>FluxConfig.Provider</Title>
         <Description>Microsoft.Extensions.Configuration provider for interacting with FluxConfig system. Provides automated retrieval and updating of the application's running configuration without the need to restart the application or interact with the deployment environment</Description>
         <PackageProjectUrl>https://github.com/FluxConfig/FluxConfig.Provider</PackageProjectUrl>
-        <PackageReleaseNotes>Release candidate build including core functionality. Fixed XML and project documentation.</PackageReleaseNotes>
+        <PackageReleaseNotes>Release version.</PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageIcon>icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
