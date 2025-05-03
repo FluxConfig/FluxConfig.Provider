@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using FluxConfig.Provider.Client.Interfaces;
 using FluxConfig.Provider.Exceptions;
 using FluxConfig.Provider.Logging;
@@ -16,6 +17,8 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
     private readonly Action<FluxConfigExceptionContext> _exceptionHandler;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<FluxConfigurationProvider> _logger;
+    private readonly object _dataLock = new object();
+    private ImmutableDictionary<string, string?> _vaultData = ImmutableDictionary<string, string?>.Empty;
     private bool _disposed;
     private CancellationTokenSource? _cts;
     private Task? _configFetcherTask;
@@ -112,7 +115,6 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
         {
             throw new ObjectDisposedException(nameof(FluxConfigurationProvider));
         }
-        
 
         _logger.StartProviderExecution( _fluxConfigClient.Address);
 
@@ -154,31 +156,31 @@ public sealed class FluxConfigurationProvider : ConfigurationProvider, IDisposab
 
     private async Task LoadRealTimeConfig(CancellationToken cancellationToken)
     {
-        Dictionary<string, string?> currentData = await _fluxConfigClient.LoadRealTimeConfigAsync(cancellationToken);
+        Dictionary<string, string?> realTimeData = await _fluxConfigClient.LoadRealTimeConfigAsync(cancellationToken);
 
-        if (currentData.Count == 0 || HasSameData(currentData))
+        lock (_dataLock)
         {
-            return;
+            var mergedData = _vaultData.SetItems(realTimeData);
+            
+            if (mergedData.Count != 0 && !HasSameData(mergedData))
+            {
+                Data = mergedData;
+                OnReload();
+            }
         }
-
-        Data = currentData;
-        OnReload();
     }
 
     private void LoadVaultConfig()
     {
         Dictionary<string, string?> currentData = _fluxConfigClient.LoadVaultConfig();
 
-        if (currentData.Count == 0 || HasSameData(currentData))
+        lock (_dataLock)
         {
-            return;
+            _vaultData = currentData.ToImmutableDictionary();
         }
-
-        Data = currentData;
-        OnReload();
     }
 
-    private bool HasSameData(Dictionary<string, string?> newData)
+    private bool HasSameData(ImmutableDictionary<string, string?> newData)
     {
         if (Data.Count != newData.Count)
         {
