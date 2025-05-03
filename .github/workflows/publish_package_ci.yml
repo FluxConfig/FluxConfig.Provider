@@ -23,7 +23,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: |
+            6.0.x
+            8.0.x
       
       - name: Extract package version
         id: get_version
@@ -35,12 +37,15 @@ jobs:
       - name: Restore and build
         run: |
           dotnet restore $PROJECT_PATH
-          dotnet build $PROJECT_PATH --no-restore
+          dotnet build $PROJECT_PATH --configuration Release --no-restore
       
       - name: Pack
-        run: dotnet pack $PROJECT_PATH -c Release -o ./nupkgs \
-          --include-symbols \
-          -p:PackageVersion=${{ steps.get_version.outputs.version }}
+        run: |
+          dotnet pack $PROJECT_PATH \
+            --configuration Release \
+            -o ./nupkgs \
+            --include-symbols \
+            -p:PackageVersion=${{ steps.get_version.outputs.version }}
         
       - name: Publish to nuget.org
         run: dotnet nuget push ./nupkgs/*.nupkg -k $NUGET_API_KEY -s $NUGET_PACKAGES_SOURCE
